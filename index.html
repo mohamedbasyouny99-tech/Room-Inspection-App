@@ -450,6 +450,29 @@ h2 .btn.sm{text-transform:none;letter-spacing:0}
 .tag.urgent{background:var(--fail-soft);color:var(--fail)}
 .mbtns{display:flex;flex-wrap:wrap;gap:6px}
 .rp .mt{border:1px solid #f0dcae;background:#fff8e8!important;border-radius:8px;padding:8px 10px;break-inside:avoid}
+
+/* ---- notifications bell (Admin) ---- */
+.hbtns{position:absolute;top:calc(14px + env(safe-area-inset-top));inset-inline-end:max(16px,env(safe-area-inset-right));display:flex;gap:8px;align-items:center;z-index:6}
+.hbtns .refbtn{position:static}
+.bellbtn{position:relative;font:600 .95rem/1 inherit;color:#fff;background:rgb(255 255 255/.14);border:1px solid rgb(255 255 255/.3);border-radius:999px;width:36px;height:30px;cursor:pointer;padding:0}
+.bellbtn:hover{background:rgb(255 255 255/.24)}
+.bellbtn b{position:absolute;top:-6px;inset-inline-end:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#d93a2f;color:#fff;font-size:.68rem;line-height:18px;text-align:center;box-shadow:0 0 0 2px rgb(255 255 255/.85)}
+.bellbtn b:empty{display:none}
+.bellpanel{position:absolute;top:44px;inset-inline-end:0;width:min(360px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 40px rgb(0 0 0/.25);text-align:start}
+.bellpanel[hidden]{display:none}
+.bellhead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface)}
+.bellhead b{font-size:.95rem}
+.bellhead button{all:unset;cursor:pointer;color:var(--accent);font-size:.78rem;font-weight:700}
+.bellitem{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.bellitem:hover{background:var(--accent-soft)}
+.bellitem.new{background:color-mix(in srgb,var(--accent-soft) 70%,transparent)}
+.bellitem i{grid-row:1/3;width:10px;height:10px;border-radius:50%;margin-top:5px;background:var(--muted)}
+.bellitem i.bad,.bellitem i.urgent{background:#c8423b}.bellitem i.warn,.bellitem i.maint{background:#e0a526}.bellitem i.good{background:#2b7a4b}
+.bellitem span{font-size:.86rem;font-weight:600}
+.bellitem small{font-size:.74rem;color:var(--muted)}
+.bellempty{padding:24px 14px;text-align:center;color:var(--muted);font-size:.86rem}
+.bellperm{margin:10px 14px;font-size:.78rem}
+@media (max-width:640px){.hbtns{position:relative;top:auto;inset-inline-end:auto;justify-content:flex-end;margin:0 0 8px}}
 </style>
 </head>
 <body>
@@ -459,7 +482,11 @@ h2 .btn.sm{text-transform:none;letter-spacing:0}
   <h1 data-t="Room Inspection Checklist">Room Inspection Checklist</h1>
   <div class="who" id="who"></div>
   <button class="langbtn" id="langBtn" type="button" hidden>عربي</button>
-  <button class="refbtn" id="refBtn" type="button" title="Get the latest app version and data">⟳ Refresh</button>
+  <div class="hbtns">
+    <button class="bellbtn admin-only" id="bellBtn" type="button" title="Notifications" aria-label="Notifications">🔔<b id="bellCount"></b></button>
+    <button class="refbtn" id="refBtn" type="button" title="Get the latest app version and data">⟳ Refresh</button>
+    <div class="bellpanel" id="bellPanel" hidden></div>
+  </div>
 </header>
 
 <!-- LOGIN -->
@@ -949,7 +976,7 @@ async function loadAll(){const out=[];
   return out}
 async function refresh(){if(!IS_ADMIN())return;
   try{LOG=(await loadAll()).map(fromRow)}catch(e){toast(t("Could not load inspections")+": "+(e.message||e));return}
-  if(!$("#v-log").hidden)renderLog();if(!$("#v-dash").hidden)renderDash()}
+  if(!$("#v-log").hidden)renderLog();if(!$("#v-dash").hidden)renderDash();bellUpdate()}
 async function loadNames(){const {data,error}=await sb.from("staff_names").select("kind,name");if(error||!data)return;
   NAMES={sup:[],att:[]};data.forEach(r=>{if(NAMES[r.kind])NAMES[r.kind].push(r.name)});NAMES.sup.sort();NAMES.att.sort();store(K.names,NAMES);fillNames()}
 async function loadSetup(){
@@ -1584,6 +1611,46 @@ document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>show(b.dat
 /* installable/offline app removed: clean up any copy installed earlier */
 if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
 if(window.caches)caches.keys().then(ks=>ks.filter(k=>k.startsWith("ri-")).forEach(k=>caches.delete(k))).catch(()=>{});
+
+/* ---------- notifications bell (Admin) ---------- */
+const bellKey=()=>"ri_bell_seen_"+(ME?ME.id:"");
+let bellKnown=null;
+function bellSeen(){const v=load(bellKey(),null);return v||new Date(Date.now()-864e5).toISOString()}
+function bellEvents(){const ev=[];
+  LOG.forEach(r=>{const at=r.ts||(r.date+"T00:00:00Z"),base={at,r};
+    if(r.score<85)ev.push({...base,key:r.id+":s",kind:"bad",text:"Room "+r.room+" · Re-clean "+r.score+"/100",sub:"Attendant "+r.att+" · "+r.sup});
+    else if(r.score<95)ev.push({...base,key:r.id+":s",kind:"warn",text:"Room "+r.room+" · Re-touch "+r.score+"/100",sub:"Attendant "+r.att+" · "+r.sup});
+    else ev.push({...base,key:r.id+":s",kind:"good",text:"Room "+r.room+" · Ready "+r.score+"/100",sub:"Attendant "+r.att+" · "+r.sup});
+    if(r.maint&&!r.maint_fixed_at){const u=r.maint.priority==="urgent";
+      ev.push({...base,key:r.id+":m",kind:u?"urgent":"maint",text:"Room "+r.room+" · Maintenance"+(u?" (URGENT)":""),
+        sub:typeof maintText==="function"?maintText(r.maint):""})}});
+  return ev.sort((a,b)=>String(b.at).localeCompare(String(a.at)))}
+const bellImportant=e=>e.kind==="bad"||e.kind==="urgent"||e.kind==="maint"||e.kind==="warn";
+function ago(at){const m=Math.round((Date.now()-new Date(at))/6e4);if(m<1)return"just now";if(m<60)return m+" min ago";const h=Math.round(m/60);if(h<24)return h+" h ago";return Math.round(h/24)+" d ago"}
+function bellUpdate(){if(!IS_ADMIN())return;const seen=bellSeen(),ev=bellEvents();
+  const unread=ev.filter(e=>new Date(e.at)>new Date(seen)&&bellImportant(e)).length;$("#bellCount").textContent=unread?(unread>99?"99+":String(unread)):"";
+  /* phone/PC pop-up for new Re-clean or maintenance while the app is open */
+  const keys=new Set(ev.map(e=>e.key));
+  if(bellKnown&&"Notification" in window&&Notification.permission==="granted")
+    ev.filter(e=>!bellKnown.has(e.key)&&(e.kind==="bad"||e.kind==="urgent"||e.kind==="maint")).slice(0,5)
+      .forEach(e=>{try{new Notification(e.text,{body:e.sub||"",tag:e.key})}catch(err){}});
+  bellKnown=keys;if(!$("#bellPanel").hidden)bellRender()}
+function bellRender(){const P=$("#bellPanel"),seen=bellSeen(),ev=bellEvents().slice(0,40);P.innerHTML="";
+  const h=el("div","bellhead");h.append(el("b",null,"Notifications"));const mr=el("button",null,"Mark all as read");mr.type="button";
+  mr.onclick=()=>{store(bellKey(),new Date().toISOString());bellUpdate();bellRender()};h.append(mr);P.append(h);
+  if("Notification" in window&&Notification.permission==="default"){const pb=el("button","btn sm bellperm","Allow pop-up alerts on this device");pb.type="button";
+    pb.onclick=()=>Notification.requestPermission().then(()=>bellRender());P.append(pb)}
+  if(!ev.length){P.append(el("div","bellempty","No inspections yet."));return}
+  ev.forEach(e=>{const it=el("div","bellitem"+(new Date(e.at)>new Date(seen)&&bellImportant(e)?" new":""));const dot=el("i",e.kind);
+    it.append(dot,el("span",null,e.text),el("small",null,[e.sub,ago(e.at)].filter(Boolean).join(" · ")));
+    it.onclick=()=>{P.hidden=true;roomHistory(e.r.prop,e.r.room)};P.append(it)})}
+$("#bellBtn").onclick=e=>{e.stopPropagation();const P=$("#bellPanel");P.hidden=!P.hidden;if(!P.hidden)bellRender()};
+$("#bellPanel").addEventListener("click",e=>e.stopPropagation());
+document.addEventListener("click",()=>{const P=$("#bellPanel");if(!P.hidden)P.hidden=true});
+/* check for new inspections every minute while an Admin has the app open */
+setInterval(()=>{if(ME&&IS_ADMIN()&&document.visibilityState==="visible"&&!EDIT)refresh()},60000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ME&&IS_ADMIN()&&!EDIT)refresh()});
+
 /* ---------- refresh: newest app version + data ---------- */
 $("#refBtn").onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent="⟳ Refreshing…";saveDraft();
   try{await Promise.race([flush(),new Promise(ok=>setTimeout(ok,6000))])}catch(err){}
