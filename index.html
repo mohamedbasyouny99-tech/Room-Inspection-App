@@ -522,6 +522,7 @@ body:not(.authed) .login{background:rgb(255 255 255/.9);backdrop-filter:blur(8px
 .ulist tr.off td{opacity:.55}
 .urole{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
 .urole.admin{background:var(--coral-soft);color:var(--coral)}
+.urole.owner{background:var(--accent);color:#fff}
 .ustat{font-size:.72rem;font-weight:700}
 .ustat.on{color:var(--pass)}.ustat.off{color:var(--fail)}
 .dlgform{display:grid;gap:12px;margin:12px 0}
@@ -1738,12 +1739,13 @@ async function loadUsers(){const box=$("#userList");if(!box||!sb)return;
 function renderUsers(){const box=$("#userList");box.innerHTML="";
   if(!USERS.length){box.append(el("p","empty","No users."));return}
   const rows=USERS.map(u=>{const me=ME&&u.id===ME.id;
-    const role=el("span","urole "+u.role,u.role==="admin"?"Admin":"User");
+    const role=el("span","urole "+(u.is_owner?"owner":u.role),u.is_owner?"Owner":u.role==="admin"?"Admin":"User");
     const st=el("span","ustat "+(u.disabled?"off":"on"),u.disabled?"Disabled":"Active");
     const acts=el("div","uacts");
     const b=(lab,fn,cls)=>{const x=el("button","btn sm"+(cls?" "+cls:""),lab);x.type="button";x.onclick=fn;acts.append(x);return x};
-    b("Edit",()=>userEdit(u));b("Password",()=>userPassword(u));
-    if(!me){b(u.disabled?"Enable":"Disable",()=>userActive(u,u.disabled));
+    if(u.is_owner&&!me){acts.append(el("span","muted uhint","🔒 Protected"))}
+    else{b("Edit",()=>userEdit(u));b("Password",()=>userPassword(u))}
+    if(!me&&!u.is_owner){b(u.disabled?"Enable":"Disable",()=>userActive(u,u.disabled));
       const d=b("Delete",null,"danger");d.onclick=e=>arm(e.currentTarget,()=>userDelete(u),"Tap again: delete "+uName(u.email))}
     const nm=el("span",null,(u.full_name||uName(u.email))+(me?" (you)":""));
     return[nm,uName(u.email),role,st,u.last_sign_in_at?new Date(u.last_sign_in_at).toLocaleDateString():"Never",acts]});
@@ -1760,7 +1762,8 @@ function dlgForm(title,fields,saveLabel,onSave){const B=$("#dlgBody");B.innerHTM
   B.append(sv);$("#dlg").showModal()}
 function lab(text,input){const l=el("label","f");l.append(el("span",null,text),input);return l}
 function userEdit(u){const n=el("input");n.value=u.full_name||"";const r=el("select");[["user","User"],["admin","Admin"]].forEach(([v,t])=>r.append(new Option(t,v)));r.value=u.role;
-  dlgForm("Edit "+uName(u.email),[lab("Full name",n),lab("Role",r)],"Save",()=>userCall("admin_update_user",{p_id:u.id,p_full_name:n.value,p_role:r.value},"User updated"))}
+  if(u.is_owner)r.disabled=true;
+  dlgForm("Edit "+uName(u.email),[lab("Full name",n),lab("Role",r)].concat(u.is_owner?[el("p","muted uhint","Owner account: always Admin; nobody else can edit, disable or delete it.")]:[]),"Save",()=>userCall("admin_update_user",{p_id:u.id,p_full_name:n.value,p_role:r.value},"User updated"))}
 function userPassword(u){const pw=el("input");pw.type="text";pw.autocomplete="new-password";pw.placeholder="min. 6 characters";
   const hint=el("p","muted uhint",ME&&u.id===ME.id?"Your new password works from your next sign-in.":"The user is signed out on all devices and must sign in with the new password.");
   dlgForm("New password for "+uName(u.email),[lab("New password",pw),hint],"Set password",()=>pw.value.length<6?(toast("Password must be at least 6 characters"),false):userCall("admin_set_password",{p_id:u.id,p_password:pw.value},"Password changed"))}
