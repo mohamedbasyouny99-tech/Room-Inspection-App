@@ -1771,7 +1771,7 @@ $("#dashPdf").onclick=()=>{document.body.classList.add("pdash");const done=()=>{
 /* ---------- settings (Admin editors) ---------- */
 function renderSettings(){
   if(!IS_ADMIN())return;
-  loadUsers();loadStorage();
+  loadUsers();fillArcYears();loadStorage();
   $("#s-props").value=PROPS.join("\n");renderRooms();renderCle()}
 
 /* checklist editor */
@@ -1936,7 +1936,7 @@ let STO=null,STO_AT=0,ARC=null;
 const MB=b=>(b/1048576).toFixed(b<1048576*10?1:0)+" MB";
 async function loadStorage(){if(!IS_ADMIN()||!sb)return;STO_AT=Date.now();
   const {data,error}=await sb.rpc("admin_storage_usage");
-  if(error){STO=null;const box=$("#stoMeter");box.innerHTML="";box.append(el("p","muted","Storage meter is not set up yet: run supabase_storage_archive.sql in Supabase → SQL Editor."));return}
+  if(error){STO=null;const box=$("#stoMeter");box.innerHTML="";box.append(el("p","muted","Storage meter is not set up yet: run remal_update_all.sql in Supabase → SQL Editor. ("+(error.message||error.code||"error")+")"));fillArcYears();return}
   STO=(data&&data[0])||null;renderStorage();bellUpdate()}
 function stoMaybe(){if(IS_ADMIN()&&Date.now()-STO_AT>3600e3)loadStorage()}
 function stoPct(){return STO?Math.min(100,100*STO.db_bytes/STO.limit_bytes):0}
@@ -1953,7 +1953,7 @@ function renderStorage(){const box=$("#stoMeter");if(!box||!STO)return;box.inner
 function fillArcYears(){const sel=$("#arcYear");if(!sel)return;const cur=new Date().getFullYear(),keep=sel.value,cnt={};
   LOG.forEach(r=>{const y=+String(r.date).slice(0,4);if(y&&y<cur)cnt[y]=(cnt[y]||0)+1});
   const ys=Object.keys(cnt).map(Number).sort((a,b)=>a-b);sel.innerHTML="";
-  if(!ys.length){const o=el("option",null,"No finished years yet");o.value="";sel.append(o)}
+  if(!ys.length){const o=el("option",null,"No finished years yet ("+cur+" can be archived from January "+(cur+1)+")");o.value="";sel.append(o)}
   ys.forEach(y=>{const n=ys.filter(x=>x<=y).reduce((a,x)=>a+cnt[x],0);const o=el("option",null,y+"  ("+n+" inspections)");o.value=String(y);sel.append(o)});
   if(keep&&[...sel.options].some(o=>o.value===keep))sel.value=keep;
   $("#arcDl").disabled=!ys.length;if(!ARC||String(ARC.y)!==sel.value){ARC=null;$("#arcDel").disabled=true}}
