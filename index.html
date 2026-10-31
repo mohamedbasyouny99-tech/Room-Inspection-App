@@ -759,11 +759,11 @@ header .eyebrow{font-size:1.15rem;letter-spacing:.12em;font-weight:700;line-heig
       <div class="actions"><button class="btn primary" id="saveNames" type="button" data-t="Save names">Save names</button></div>
     </div>
 
-    <h2 data-t="Storage">Storage</h2>
-    <div class="card" id="stoCard">
+    <h2 data-t="Storage" class="owner-only">Storage</h2>
+    <div class="card owner-only" id="stoCard">
       <div id="stoMeter"><p class="muted" data-t="Checking storage…">Checking storage…</p></div>
       <div class="actions"><button class="btn" id="stoLoad" type="button" data-t="Check storage">Check storage</button></div>
-      <div class="sto-arch owner-only">
+      <div class="sto-arch">
         <h3 data-t="Archive old inspections">Archive old inspections</h3>
         <p class="muted" data-t="Step 1 downloads the chosen months as Excel + a backup file. Step 2 removes them from the database to free space. The backup file can be imported again at any time (Data → Import backup).">Step 1 downloads the chosen months as Excel + a backup file. Step 2 removes them from the database to free space. The backup file can be imported again at any time (Data → Import backup).</p>
         <div class="actions" style="align-items:flex-end">
@@ -1951,11 +1951,11 @@ $("#wipe").onclick=e=>arm(e.currentTarget,async()=>{if(!IS_OWNER)return toast("O
 let STO=null,STO_AT=0,ARC=null,STO_ERR="";
 const MB=b=>(b/1048576).toFixed(b<1048576*10?1:0)+" MB";
 const STO_LIMIT=524288000,STO_ROW=1300,STO_BASE=25*1048576;
-async function loadStorage(){if(!IS_ADMIN()||!sb)return;STO_AT=Date.now();
+async function loadStorage(){if(!IS_OWNER||!sb)return;STO_AT=Date.now();
   const {data,error}=await sb.rpc("admin_storage_usage");
   if(error){STO=null;STO_ERR=error.message||error.code||"error"}else{STO=(data&&data[0])||null;STO_ERR=""}
   renderStorage();bellUpdate()}
-function stoMaybe(){if(IS_ADMIN()&&Date.now()-STO_AT>3600e3)loadStorage()}
+function stoMaybe(){if(IS_OWNER&&Date.now()-STO_AT>3600e3)loadStorage()}
 function stoBytes(){return STO?STO.db_bytes:STO_BASE+LOG.length*STO_ROW}
 function stoLimit(){return STO?STO.limit_bytes:STO_LIMIT}
 function stoPct(){return Math.min(100,100*stoBytes()/stoLimit())}
@@ -2029,7 +2029,7 @@ const bellKey=()=>"ri_bell_seen_"+(ME?ME.id:"");
 let bellKnown=null;
 function bellSeen(){const v=load(bellKey(),null);return v||new Date(Date.now()-864e5).toISOString()}
 function bellEvents(){const ev=[];
-  if(STO&&stoPct()>=80){const p=Math.floor(stoPct());ev.push({at:new Date().toISOString().slice(0,10)+"T00:00:00Z",key:"sto:"+p,kind:"urgent",sto:true,
+  if(IS_OWNER&&STO&&stoPct()>=80){const p=Math.floor(stoPct());ev.push({at:new Date().toISOString().slice(0,10)+"T00:00:00Z",key:"sto:"+p,kind:"urgent",sto:true,
     text:"💾 Storage "+p+"% full",sub:"Settings → Storage → Archive old inspections"})}
   (IS_OWNER?PWREQ:[]).forEach(q=>ev.push({at:q.created_at,key:"pw:"+q.id+":"+q.created_at,kind:"urgent",pw:q,
     text:"🔑 Password request · "+(q.full_name||q.username),sub:q.username+(q.note?" — "+q.note:"")}));
