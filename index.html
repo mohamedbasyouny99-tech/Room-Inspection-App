@@ -561,10 +561,15 @@ header .eyebrow{font-size:1.15rem;letter-spacing:.12em;font-weight:700;line-heig
 .sto-arch h3{margin:0 0 4px;font-size:.95rem}
 .sto-arch .f{min-width:240px}
 .sto-note{margin:0 0 4px;font-size:.78rem}
+#arcBanner{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 14px;margin:0 0 10px;border-radius:12px;
+  background:#7c3aed;color:#fff;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#arcBanner b{font-weight:700}#arcBanner .btn{background:#fff;color:#5b21b6;border-color:#fff}
+#arcBanner[hidden]{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
+<div id="arcBanner" hidden><span>📦 <b data-t="Viewing archive">Viewing archive</b> · <span id="arcBannerTxt"></span></span><button class="btn sm" id="arcExit" type="button" data-t="Close archive">Close archive</button></div>
 <header>
   <div class="eyebrow">Remal Beach Hotel · Housekeeping</div>
   <h1 data-t="Room Inspection Checklist">Room Inspection Checklist</h1>
@@ -767,6 +772,10 @@ header .eyebrow{font-size:1.15rem;letter-spacing:.12em;font-weight:700;line-heig
           <button class="btn danger" id="arcDel" type="button" disabled data-t="2. Remove from database">2. Remove from database</button>
         </div>
         <p class="muted" id="arcInfo"></p>
+        <div class="actions" style="margin-top:6px">
+          <label class="btn" style="display:inline-block"><span data-t="Open archive file (view only)">Open archive file (view only)</span><input type="file" id="arcOpen" accept=".json,application/json" hidden multiple></label>
+        </div>
+        <p class="muted" style="font-size:.78rem" data-t="Opens an Archive_Backup_….json file in the Log and Dashboard without putting it back in the database (no space used). Close archive returns to live data.">Opens an Archive_Backup_….json file in the Log and Dashboard without putting it back in the database (no space used). Close archive returns to live data.</p>
       </div>
     </div>
 
@@ -897,6 +906,7 @@ const uidNew=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- language ---------- */
 const I18N={"+ Add item": "+ إضافة بند", "+ Add section": "+ إضافة قسم", "30 days": "30 يومًا", "7 days": "7 أيام", "Account": "الحساب", "Action": "الإجراء", "Activity log": "سجل النشاط", "Add at least one property": "أضف عقارًا واحدًا على الأقل", "Add photo": "إضافة صورة", "Admin": "مدير", "Age": "المدة", "All inspections": "كل التفتيشات", "All inspections deleted from the database": "تم حذف كل التفتيشات من قاعدة البيانات", "All inspections uploaded.": "تم رفع كل التفتيشات.", "All marks cleared": "تم مسح كل العلامات", "All properties": "كل العقارات", "All recorded inspections": "كل التفتيشات المسجلة", "All statuses": "كل الحالات", "All time": "كل الفترات", "Arabic text": "النص بالعربية", "Attendant": "عامل الغرف", "Attendant acknowledgement": "إقرار عامل الغرف", "Attendant name": "اسم عامل الغرف", "Attendant types name": "يكتب عامل الغرف اسمه", "Average % of points kept · line = 95% target": "متوسط نسبة النقاط المحققة · الخط = هدف 95%", "Average score": "متوسط الدرجة", "Average score over time": "متوسط الدرجة عبر الوقت", "Average score · from the room list": "متوسط الدرجة · من قائمة الغرف", "Avg inspection time": "متوسط مدة التفتيش", "Avg score": "متوسط الدرجة", "Avg time": "متوسط المدة", "Avg time to close": "متوسط وقت الإغلاق", "Below 95": "أقل من 95", "Below 95 · lowest first": "أقل من 95 · الأقل أولًا", "By floor": "حسب الطابق", "By property": "حسب العقار", "By room type": "حسب نوع الغرفة", "Cancel edit": "إلغاء التعديل", "Cannot reach the sign-in service. Check the internet connection and reload.": "تعذر الوصول إلى خدمة الدخول. تحقق من الإنترنت وأعد التحميل.", "Change": "التغيير", "Changes discarded": "تم تجاهل التغييرات", "Changes saved": "تم حفظ التغييرات", "Checklist": "قائمة الفحص", "Checklist saved for all devices": "تم حفظ قائمة الفحص لكل الأجهزة", "Clear all marks": "مسح كل العلامات", "Clear sheet": "مسح الورقة", "Clear signature": "مسح التوقيع", "Close": "إغلاق", "Closed": "مغلق", "Closed by admin": "أغلقه المدير", "Collapse all": "طي الكل", "Expand all": "فتح الكل", "Copied": "تم النسخ", "Copy defect report": "نسخ تقرير العيوب", "Copy report": "نسخ التقرير", "Could not load": "تعذر التحميل", "Could not load inspections": "تعذر تحميل التفتيشات", "Could not read": "تعذرت قراءة", "Could not read this photo": "تعذرت قراءة هذه الصورة", "Could not save": "تعذر الحفظ", "Could not save changes": "تعذر حفظ التغييرات", "Dashboard": "لوحة المتابعة", "Data": "البيانات", "Date": "التاريخ", "Defects": "العيوب", "Defects per room": "العيوب لكل غرفة", "Defects to fix": "العيوب المطلوب إصلاحها", "Delete": "حذف", "Delete all inspections": "حذف كل التفتيشات", "Delete failed": "فشل الحذف", "Details changed": "تم تغيير التفاصيل", "Device storage is full — upload or remove photos": "مساحة الجهاز ممتلئة — ارفع الصور أو احذفها", "Discard changes": "تجاهل التغييرات", "Edit": "تعديل", "Edit items, Arabic text and points. Points must total exactly 100. Removed items stay in old inspections.": "عدّل البنود والنص العربي والنقاط. يجب أن يكون مجموع النقاط 100 تمامًا. البنود المحذوفة تبقى في التفتيشات القديمة.", "Edited": "معدّل", "Editing saved inspection": "تعديل تفتيش محفوظ", "English text": "النص بالإنجليزية", "Entered by": "أدخله", "Every edit, close and delete of a saved inspection, with who did it and when.": "كل تعديل وإغلاق وحذف لتفتيش محفوظ، مع من قام به ومتى.", "Every item needs a section, an English text and at least 1 point": "كل بند يحتاج قسمًا ونصًا بالإنجليزية ونقطة واحدة على الأقل", "Every room in this range was Ready.": "كل الغرف في هذه الفترة كانت جاهزة.", "Export CSV": "تصدير CSV", "Export Excel (CSV)": "تصدير إكسل (CSV)", "Export backup": "تصدير نسخة احتياطية", "Export defects (CSV)": "تصدير العيوب (CSV)", "Fail": "غير مطابق", "File loaded — check and save": "تم تحميل الملف — راجعه ثم احفظ", "Fixed first time": "أُصلحت من أول مرة", "Fixed: re-inspected Ready": "تم الإصلاح: أعيد التفتيش وجاهزة", "Floor": "الطابق", "Full checklist": "قائمة الفحص الكاملة", "Generated": "أُنشئ", "Housekeeping": "التدبير الفندقي", "Import CSV": "استيراد CSV", "Import backup": "استيراد نسخة احتياطية", "Insp.": "تفتيش", "Inspect": "التفتيش", "Inspection deleted": "تم حذف التفتيش", "Inspection summary": "ملخص التفتيش", "Inspection time": "مدة التفتيش", "Inspections": "التفتيشات", "Inspections carried out": "التفتيشات المنفذة", "Inspections completed": "التفتيشات المكتملة", "Inspections from all users are stored centrally in the database. Export to Excel for reporting. Import backup uploads old backup files; duplicates are skipped.": "تُحفظ تفتيشات كل المستخدمين مركزيًا في قاعدة البيانات. صدّرها إلى إكسل للتقارير. استيراد النسخة الاحتياطية يرفع الملفات القديمة ويتجاهل المكرر.", "Item": "البند", "Last edited": "آخر تعديل", "Last score": "آخر درجة", "Load activity": "تحميل النشاط", "Log": "السجل", "Mark remaining ✓": "تحديد الباقي ✓", "Mark remaining ✗": "تحديد الباقي ✗", "Mark the checklist first": "حدد قائمة الفحص أولًا", "Minimum 3 inspections": "3 تفتيشات على الأقل", "Missing": "ناقص", "Monthly attendant ranking": "ترتيب عمال الغرف الشهري", "Most repeated defects": "أكثر العيوب تكرارًا", "Name": "الاسم", "Names": "الأسماء", "Names saved for all devices": "تم حفظ الأسماء لكل الأجهزة", "No activity yet.": "لا يوجد نشاط بعد.", "No change vs previous period": "لا تغيير عن الفترة السابقة", "No defects recorded in this range.": "لا عيوب مسجلة في هذه الفترة.", "No defects to export": "لا عيوب للتصدير", "No defects.": "لا عيوب.", "No earlier period to compare": "لا توجد فترة سابقة للمقارنة", "No inspections": "لا تفتيشات", "No inspections for this room.": "لا تفتيشات لهذه الغرفة.", "No inspections saved yet.": "لا توجد تفتيشات محفوظة بعد.", "No inspections in this date range.": "لا تفتيشات في هذه الفترة.", "No inspections match the filters.": "لا تفتيشات تطابق عوامل التصفية.", "No marks to clear": "لا علامات للمسح", "No open rooms.": "لا غرف مفتوحة.", "Nobody has 3 or more inspections this month.": "لا أحد لديه 3 تفتيشات أو أكثر هذا الشهر.", "Not started": "لم يبدأ", "Nothing to export": "لا شيء للتصدير", "One name per line. These fill the dropdown suggestions.": "اسم واحد في كل سطر. تظهر هذه الأسماء كاقتراحات.", "One property per line, in display order. Deleting a property also deletes its room list.": "عقار واحد في كل سطر بترتيب العرض. حذف عقار يحذف قائمة غرفه أيضًا.", "One room per line: room, floor, room type. Example: 214, 2, Deluxe King. Supervisors can then only choose rooms from this list.": "غرفة واحدة في كل سطر: رقم الغرفة، الطابق، نوع الغرفة. مثال: 214, 2, Deluxe King. بعدها يختار المشرفون الغرف من هذه القائمة فقط.", "Open": "مفتوحة", "Open (needs re-inspection)": "مفتوحة (تحتاج إعادة تفتيش)", "Open rooms": "غرف مفتوحة", "PDF report": "تقرير PDF", "PDF summary": "ملخص PDF", "Pass": "مطابق", "Password": "كلمة المرور", "Photo": "صورة", "Points must total exactly 100": "يجب أن يكون مجموع النقاط 100 تمامًا", "Properties": "العقارات", "Properties saved": "تم حفظ العقارات", "Property": "العقار", "Pts": "نقاط", "ROOM INSPECTION": "تفتيش غرفة", "ROOM INSPECTION REPORT": "تقرير تفتيش غرفة", "Re-clean": "إعادة تنظيف", "Re-clean rooms": "غرف إعادة التنظيف", "Re-inspected: still below 95": "أعيد التفتيش: ما زالت أقل من 95", "Re-inspection follow-up": "متابعة إعادة التفتيش", "Re-touch": "لمسات أخيرة", "Ready": "جاهزة", "Ready %": "نسبة الجاهزية", "Ready first time": "جاهزة من أول مرة", "Recurring defects": "العيوب المتكررة", "Refresh data": "تحديث البيانات", "Remark": "ملاحظة", "Remark: what needs fixing": "ملاحظة: ما الذي يحتاج إصلاحًا", "Remove item": "حذف البند", "Remove photo": "حذف الصورة", "Remove section": "حذف القسم", "Reopen": "إعادة فتح", "Reopened": "أعيد الفتح", "Result": "النتيجة", "Role": "الدور", "Room": "غرفة", "Room Attendant": "عامل الغرف", "Room Inspection Checklist": "قائمة تفتيش الغرف", "Room No.": "رقم الغرفة", "Room attendant performance": "أداء عمال الغرف", "Room attendants": "عمال الغرف", "Room details": "تفاصيل الغرفة", "Room history": "سجل الغرفة", "Room list": "قائمة الغرف", "Room not in the room list for": "الغرفة غير موجودة في قائمة غرف", "Room number too long": "رقم الغرفة طويل جدًا", "Room status": "حالة الغرف", "Rooms below 95 until re-inspected": "غرف أقل من 95 حتى إعادة تفتيشها", "Rooms needing attention": "غرف تحتاج متابعة", "Save changes": "حفظ التغييرات", "Save checklist": "حفظ قائمة الفحص", "Save inspection": "حفظ التفتيش", "Save names": "حفظ الأسماء", "Save properties": "حفظ العقارات", "Save room list": "حفظ قائمة الغرف", "Saved": "تم الحفظ", "Saved inspections": "التفتيشات المحفوظة", "Score": "الدرجة", "Score by area": "الدرجة حسب المنطقة", "Search room / name": "بحث بالغرفة / الاسم", "Section (Arabic)": "القسم (عربي)", "Section (English)": "القسم (إنجليزي)", "Settings": "الإعدادات", "Share of inspections": "نسبة من التفتيشات", "Sign here": "وقّع هنا", "Sign in": "تسجيل الدخول", "Sign out": "تسجيل الخروج", "Sign with your finger": "وقّع بإصبعك", "Signature": "التوقيع", "Signed": "وقّع", "Signed in as": "مسجل الدخول باسم", "Signing in…": "جارٍ تسجيل الدخول…", "Sorted by average score": "مرتبة حسب متوسط الدرجة", "Status": "الحالة", "Still open": "ما زالت مفتوحة", "Supervisor": "المشرف", "Supervisor activity": "نشاط المشرفين", "Supervisors": "المشرفون", "Tap again to confirm": "اضغط مرة أخرى للتأكيد", "Tap again to sign out": "اضغط مرة أخرى لتسجيل الخروج", "Tap again: delete": "اضغط مرة أخرى: حذف", "Tap again: delete ALL inspections": "اضغط مرة أخرى: حذف كل التفتيشات", "This month": "هذا الشهر", "Time": "المدة", "Timed inspections only": "التفتيشات المؤقتة فقط", "Today": "اليوم", "Top 10 · % of inspections": "أعلى 10 · نسبة من التفتيشات", "Total points": "مجموع النقاط", "Unsent inspections wait for your next sign-in · tap again": "التفتيشات غير المرسلة تنتظر دخولك القادم · اضغط مرة أخرى", "Upload failed": "فشل الرفع", "Upload this device's old inspections": "رفع التفتيشات القديمة من هذا الجهاز", "Upload waiting inspections": "رفع التفتيشات المنتظرة", "User": "مستخدم", "Username or email": "اسم المستخدم أو البريد", "Week of": "أسبوع", "When": "الوقت", "Who": "من", "Wrong username or password.": "اسم المستخدم أو كلمة المرور غير صحيحة.", "attendant": "عامل الغرف", "avg score": "متوسط الدرجة", "checklist": "قائمة الفحص", "close": "إغلاق", "date": "التاريخ", "days": "يوم", "defect(s) refer to removed checklist items and will be kept": "عيب/عيوب تخص بنودًا محذوفة وستبقى كما هي", "delete": "حذف", "e.g. 214": "مثال 214", "edit": "تعديل", "insp.": "تفتيش", "inspection(s) kept on this device · will upload when online": "تفتيش محفوظ على هذا الجهاز · سيُرفع عند الاتصال", "inspection(s) saved on this device, waiting to upload.": "تفتيش محفوظ على هذا الجهاز بانتظار الرفع.", "inspections": "تفتيشات", "inspections loaded": "تفتيشات محمّلة", "inspections uploaded · duplicates skipped": "تفتيشات مرفوعة · تم تجاهل المكرر", "items": "بنود", "left": "متبقٍ", "of inspections": "من التفتيشات", "of points kept": "من النقاط المحققة", "old inspections uploaded · duplicates skipped": "تفتيشات قديمة مرفوعة · تم تجاهل المكرر", "pts": "نقاط", "reopen": "إعادة فتح", "room": "الغرفة", "rooms": "غرف", "rooms saved for": "غرف محفوظة لـ", "supervisor": "المشرف", "times": "مرات", "to": "إلى", "unmarked items": "بنود غير محددة", "vs previous period": "عن الفترة السابقة", "waiting to upload": "بانتظار الرفع", "Weekly average": "المتوسط الأسبوعي", "Daily average": "المتوسط اليومي", "Per week": "لكل أسبوع", "Per day": "لكل يوم", "Waiting for re-inspection": "بانتظار إعادة التفتيش", "Nothing waiting": "لا شيء بالانتظار", "Generated ": "أُنشئ", "min": "دقيقة"};
+Object.assign(I18N,{"Viewing archive":"عرض الأرشيف","Close archive":"إغلاق الأرشيف","Open archive file (view only)":"فتح ملف أرشيف (عرض فقط)"});
 Object.assign(I18N,{"Total inspections":"إجمالي الفحوصات","This year (YTD)":"هذا العام (YTD)","This month (MTD)":"هذا الشهر (MTD)","Today":"اليوم","Newest":"الأحدث",
  "Open re-inspections":"إعادات فحص مفتوحة","Open maintenance":"صيانة مفتوحة","Free space":"المساحة المتاحة","Space per inspection":"مساحة كل فحص",
  "Exact size from the database":"الحجم الفعلي من قاعدة البيانات","Estimated from your inspections":"تقدير حسب عدد الفحوصات",
@@ -1124,7 +1134,8 @@ async function loadAll(){const out=[];
   await loadNamesMap();
   RAW=new Map();MAXC="";MAXU="";out.forEach(r=>{RAW.set(r.id,decorate(r));track(r)});saveCache();
   return out}
-async function refresh(full){if(!IS_ADMIN())return;
+let ARCHIVE_MODE=false;
+async function refresh(full){if(!IS_ADMIN()||ARCHIVE_MODE)return;
   if(!full&&!RAW.size){const c=await IDB.get(cacheKey());
     if(c&&c.rows&&c.rows.length){await loadNamesMap();RAW=new Map();c.rows.forEach(r=>RAW.set(r.id,decorate(r)));MAXC=c.MAXC||"";MAXU=c.MAXU||"";
       rebuildLog();paintAll();return pollChanges()}}
@@ -1134,7 +1145,7 @@ async function refresh(full){if(!IS_ADMIN())return;
   paintAll()}
 /* light check every minute: a few hundred bytes when nothing changed */
 let POLLING=false;
-async function pollChanges(){if(!IS_ADMIN()||POLLING)return;if(!RAW.size)return refresh(true);POLLING=true;let full=false;
+async function pollChanges(){if(!IS_ADMIN()||POLLING||ARCHIVE_MODE)return;if(!RAW.size)return refresh(true);POLLING=true;let full=false;
   try{
     const back=v=>v?new Date(Date.parse(v)-120000).toISOString():"1970-01-01T00:00:00Z";
     const {data:ch,error}=await sb.from("inspections").select("*").or("created_at.gt."+back(MAXC)+",updated_at.gt."+back(MAXU)).limit(1000);
@@ -1335,7 +1346,7 @@ function renderLog(){
     d.addEventListener("toggle",async()=>{if(!d.open)return;const imgs=[...d.querySelectorAll("img[data-path]")];if(!imgs.length)return;
       const urls=await signedUrls(imgs.map(i=>i.dataset.path));imgs.forEach(i=>{if(urls[i.dataset.path])i.src=urls[i.dataset.path]})});
     const a=el("div","rowbtns");
-    const mk=(lab,fn,cls)=>{const b=el("button","btn sm"+(cls?" "+cls:""),t(lab));b.type="button";b.onclick=fn;a.append(b);return b};
+    const mk=(lab,fn,cls)=>{const b=el("button","btn sm"+(cls?" "+cls:""),t(lab));b.type="button";b.onclick=fn;if(!(ARCHIVE_MODE&&/^(Edit|Delete|Close|Reopen|Maintenance fixed|Reopen maintenance)$/.test(lab)))a.append(b);return b};
     mk("PDF report",()=>printReport(r));mk("Copy report",()=>copy(report(r)));mk("Room history",()=>roomHistory(r.prop,r.room));mk("Edit",()=>startEdit(r));
     if(r.maint)mk(r.maint_fixed_at?"Reopen maintenance":"Maintenance fixed",()=>setMaintFixed(r));
     if(r.score<95)mk(r.closed_at?"Reopen":"Close",async()=>{
@@ -1708,7 +1719,7 @@ function rankingPanel(propSel){
     dl("Attendant_Ranking_"+RANK_MONTH+".csv",csv([["Rank","Attendant","Inspections","Average score","Ready %","Defects"],...list.map((x,i)=>[i+1,x.k,x.n,x.avg.toFixed(1),Math.round(x.ready),x.def])]),"text/csv;charset=utf-8")};
   return p}
 /* ---------- maintenance report (Admin) ---------- */
-async function setMaintFixed(r){const patch={maint_fixed_at:r.maint_fixed_at?null:new Date().toISOString()};
+async function setMaintFixed(r){if(ARCHIVE_MODE)return toast("Archive is view only");const patch={maint_fixed_at:r.maint_fixed_at?null:new Date().toISOString()};
   const {error}=await sb.from("inspections").update(patch).eq("id",r.id);if(error)return toast(t("Could not save")+": "+error.message);
   r.maint_fixed_at=patch.maint_fixed_at;toast(r.maint_fixed_at?"Maintenance marked fixed":"Maintenance reopened");
   if(!$("#v-log").hidden)renderLog();if(!$("#v-dash").hidden)renderDash()}
@@ -1948,7 +1959,7 @@ function stoMaybe(){if(IS_ADMIN()&&Date.now()-STO_AT>3600e3)loadStorage()}
 function stoBytes(){return STO?STO.db_bytes:STO_BASE+LOG.length*STO_ROW}
 function stoLimit(){return STO?STO.limit_bytes:STO_LIMIT}
 function stoPct(){return Math.min(100,100*stoBytes()/stoLimit())}
-function renderStorage(){const box=$("#stoMeter");if(!box)return;box.innerHTML="";const p=stoPct(),used=stoBytes(),lim=stoLimit();
+function renderStorage(){const box=$("#stoMeter");if(!box||ARCHIVE_MODE)return;box.innerHTML="";const p=stoPct(),used=stoBytes(),lim=stoLimit();
   box.append(el("div","sto-big",(STO?"":"≈ ")+MB(used)+" / "+MB(lim)+" "+t("used")+" · "+p.toFixed(1)+"%"));
   const bar=el("div","sto-bar"+(p>=85?" bad":p>=70?" warn":""));const fill=el("i");fill.style.width=Math.max(p,1)+"%";bar.append(fill);box.append(bar);
   box.append(el("p","muted sto-note",STO?t("Exact size from the database"):t("Estimated from your inspections")+" — "+t("for the exact size run remal_update_all.sql in Supabase → SQL Editor")+(STO_ERR?" ("+STO_ERR+")":"")));
@@ -1976,6 +1987,18 @@ function fillArcYears(){const sel=$("#arcYear");if(!sel)return;const keep=sel.va
   if(keep&&[...sel.options].some(o=>o.value===keep))sel.value=keep;
   $("#arcDl").disabled=!ms.length;if(!ARC||ARC.cut!==sel.value){ARC=null;$("#arcDel").disabled=true}}
 $("#stoLoad").onclick=()=>loadStorage();
+$("#arcOpen").onchange=async e=>{const files=[...e.target.files];e.target.value="";if(!files.length)return;const recs=[],names=[];
+  for(const f of files){try{const d=JSON.parse(await f.text());const l=(d.log||[]).filter(r=>r&&r.uid&&r.date);if(!l.length)throw 0;recs.push(...l);names.push(f.name)}catch(err){toast(t("Could not read")+" "+f.name)}}
+  if(!recs.length)return;const seen=new Set(),list=[];
+  recs.forEach(r=>{if(seen.has(r.uid))return;seen.add(r.uid);list.push({...r,defects:r.defects||[],na:r.na||[],maint:r.maint||null,close_note:r.close_note||"",by:r.by||""})});
+  list.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:String(b.ts||"").localeCompare(String(a.ts||"")));
+  ARCHIVE_MODE=true;document.body.classList.add("archive-mode");LOG=list;
+  const ds=list.map(r=>r.date).sort();$("#arcBannerTxt").textContent=list.length.toLocaleString()+" inspections · "+ds[0]+" → "+ds[ds.length-1]+" · "+names.join(", ")+" · read-only";
+  $("#arcBanner").hidden=false;DASH_RANGE_ARCH();show("dash");toast(list.length+" archived inspections opened (view only)")};
+function DASH_RANGE_ARCH(){const ds=LOG.map(r=>r.date).sort();if(!ds.length)return;
+  $("#db-from").value=ds[0];$("#db-to").value=ds[ds.length-1];document.querySelectorAll("#v-dash [data-r]").forEach(b=>b.classList.remove("on"))}
+$("#arcExit").onclick=()=>{ARCHIVE_MODE=false;document.body.classList.remove("archive-mode");$("#arcBanner").hidden=true;
+  rebuildLog();const y=document.querySelector('#v-dash [data-r="ytd"]');if(y)y.click();paintAll();renderStorage();toast("Back to live data")};
 $("#arcYear").onchange=()=>{ARC=null;$("#arcDel").disabled=true;$("#arcInfo").textContent=""};
 $("#arcDl").onclick=async e=>{if(!IS_OWNER)return;const sel=$("#arcYear"),cut=sel.value;if(!cut)return;const label=sel.selectedOptions[0].dataset.label;const b=e.currentTarget;b.disabled=true;
   try{await refresh(true);                                   /* complete, up-to-date copy before archiving */
@@ -2020,7 +2043,7 @@ function bellEvents(){const ev=[];
   return ev.sort((a,b)=>String(b.at).localeCompare(String(a.at)))}
 const bellImportant=e=>e.kind==="bad"||e.kind==="urgent"||e.kind==="maint"||e.kind==="warn";
 function ago(at){const m=Math.round((Date.now()-new Date(at))/6e4);if(m<1)return"just now";if(m<60)return m+" min ago";const h=Math.round(m/60);if(h<24)return h+" h ago";return Math.round(h/24)+" d ago"}
-function bellUpdate(){if(!IS_ADMIN())return;stoMaybe();const seen=bellSeen(),ev=bellEvents();
+function bellUpdate(){if(!IS_ADMIN()||ARCHIVE_MODE)return;stoMaybe();const seen=bellSeen(),ev=bellEvents();
   const unread=ev.filter(e=>new Date(e.at)>new Date(seen)&&bellImportant(e)).length;$("#bellCount").textContent=unread?(unread>99?"99+":String(unread)):"";
   /* phone/PC pop-up for new Re-clean or maintenance while the app is open */
   const keys=new Set(ev.map(e=>e.key));
